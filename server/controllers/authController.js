@@ -1,15 +1,38 @@
 const { compare } = require("../middlewares/bycypt");
 const { signToken } = require("../middlewares/jwt");
 const { User } = require("../models/index");
-const user = require("../models/user");
 
-// liblary sign google nya
 const { OAuth2Client } = require("google-auth-library");
 const client = new OAuth2Client();
+
+function isDatabaseError(error) {
+  const dbErrorNames = new Set([
+    "SequelizeConnectionError",
+    "SequelizeConnectionRefusedError",
+    "SequelizeHostNotFoundError",
+    "SequelizeHostNotReachableError",
+    "SequelizeAccessDeniedError",
+    "SequelizeInvalidConnectionError",
+    "SequelizeDatabaseError",
+  ]);
+
+  if (dbErrorNames.has(error?.name)) return true;
+  if (dbErrorNames.has(error?.parent?.name)) return true;
+  return false;
+}
+
+function assertAuthConfig() {
+  if (!process.env.JWT_SECRET) {
+    const err = new Error("JWT_SECRET belum dikonfigurasi di server.");
+    err.name = "authConfigError";
+    throw err;
+  }
+}
 
 class AuthController {
   static async register(req, res, next) {
     try {
+      assertAuthConfig();
       const { username, email, password, avatar } = req.body;
 
       await User.create({
@@ -23,12 +46,16 @@ class AuthController {
         message: "Created Successfuly",
       });
     } catch (error) {
+      if (isDatabaseError(error)) {
+        error.name = "SequelizeConnectionError";
+      }
       next(error);
     }
   }
 
   static async login(req, res, next) {
     try {
+      assertAuthConfig();
       const { email, password } = req.body;
 
       if (!email || !password) throw { name: "loginError" };
@@ -65,19 +92,30 @@ class AuthController {
         },
       });
     } catch (error) {
+      if (isDatabaseError(error)) {
+        error.name = "SequelizeConnectionError";
+      }
       next(error);
     }
   }
 
   static async loginGoogle(req, res, next) {
     try {
+      assertAuthConfig();
+
+      if (!process.env.GOOGLE_CLIENT_ID) {
+        const err = new Error(
+          "GOOGLE_CLIENT_ID belum dikonfigurasi di server.",
+        );
+        err.name = "googleConfigError";
+        throw err;
+      }
+
       const access_token_google =
         req.headers.access_token_google || req.headers["access-token-google"];
 
-      // Validasi ketat token masuk
       if (!access_token_google) throw { name: "invalidToken" };
 
-      // Eksekusi verifikasi ke server otorisasi Google
       const ticket = await client.verifyIdToken({
         idToken: access_token_google,
         audience: process.env.GOOGLE_CLIENT_ID,
@@ -124,6 +162,9 @@ class AuthController {
         isNewGoogleUser: created,
       });
     } catch (error) {
+      if (isDatabaseError(error)) {
+        error.name = "SequelizeConnectionError";
+      }
       next(error);
     }
   }

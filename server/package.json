@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node bin/www.js",
+    "start": "node scripts/migrate.js && node bin/www.js",
     "dev": "node --watch bin/www.js",
+    "migrate": "node scripts/migrate.js",
     "test": "NODE_ENV=test jest --detectOpenHandles --forceExit"
   },
   "keywords": [],
@@ -27,6 +28,7 @@
     "pg-hstore": "^2.3.4",
     "rss-parser": "^3.13.0",
     "sequelize": "^6.37.8",
+    "sequelize-cli": "^6.6.3",
     "swagger-ui-express": "^5.0.1",
     "zod": "^4.4.3"
   },

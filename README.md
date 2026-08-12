@@ -335,11 +335,13 @@ File acuan: [`servis/WhaleWatchAi_Backend/.env.example`](servis/WhaleWatchAi_Bac
 |----------|----------------|
 | `DB_USERNAME`, `DB_PASSWORD`, `DB_NAME`, `DB_HOST` | PostgreSQL development/test |
 | `DATABASE_URL` | PostgreSQL production (Sequelize) |
+| `NODE_ENV` | `production` di Railway (opsional jika Railway auto-detect) |
 | `PORT` | Port server (default 3000) |
 | `JWT_SECRET` | Sign & verify access token |
 | `GOOGLE_CLIENT_ID` | Verifikasi Google ID token (harus sama dengan clientId di frontend) |
 | `COINGECKO_API_KEY` | Header CoinGecko demo API |
 | `GROQ_API_KEY` | Chatbot, analyze, portfolio audit |
+| `GROQ_MODEL` | Model Groq (default: `openai/gpt-oss-20b`) |
 | `MIDTRANS_MERCHANT_ID` | Midtrans |
 | `MIDTRANS_CLIENT_KEY` | Midtrans (frontend Snap + backend) |
 | `MIDTRANS_SERVER_KEY` | Midtrans server / webhook |
@@ -362,7 +364,10 @@ File acuan: [`servis/WhaleWatchAi_Backend/.env.example`](servis/WhaleWatchAi_Bac
 ### Backend
 
 - Host Node (VPS, Railway, Render, dll.)
-- Set `NODE_ENV=production` dan **`DATABASE_URL`** (wajib untuk config production)
+- Set **`DATABASE_URL`** (wajib) — Railway Postgres otomatis inject variable ini
+- Set **`NODE_ENV=production`** (disarankan; tanpa ini app auto-detect Railway via `RAILWAY_*` vars)
+- Migration otomatis saat `npm start` (`scripts/migrate.js` → `sequelize-cli db:migrate`)
+- Manual migrate: `npm run migrate` di folder `server/`
 - Inject semua secret di atas ke process environment
 - Pastikan webhook Midtrans mengarah ke `https://<domain-api>/api/payment/notification`
 - CORS sudah dikonfigurasi untuk origin request browser

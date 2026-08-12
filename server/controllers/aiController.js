@@ -1,17 +1,12 @@
 const Parser = require("rss-parser");
 const axios = require("axios");
-const Groq = require("groq-sdk");
+const {
+  getGroqClient,
+  extractJsonObject,
+  createChatCompletion,
+} = require("../utils/aiService");
 
 let parser = new Parser();
-
-function getGroqClient() {
-  if (!process.env.GROQ_API_KEY) {
-    const err = new Error("GROQ_API_KEY is not configured");
-    err.name = "aiConfigError";
-    throw err;
-  }
-  return new Groq({ apiKey: process.env.GROQ_API_KEY });
-}
 
 class AiController {
   static async analyzeCoin(req, res, next) {
@@ -96,20 +91,27 @@ class AiController {
         promptInstruction += ` Tambahkan properti JSON baru yaitu "premium_deep_dive": "berikan analisis psikologis pasar secara mendalam dan strategi entri rahasia berdasarkan berita di atas minimal 3 kalimat."`;
       }
 
-      const chatCompletion = await groq.chat.completions.create({
+      const chatCompletion = await createChatCompletion(groq, {
         messages: [
           {
             role: "user",
             content: promptInstruction,
           },
         ],
-        model: "llama-3.1-8b-instant",
         response_format: { type: "json_object" },
       });
 
-      const aiResultJson = JSON.parse(
-        chatCompletion.choices[0]?.message?.content || "{}",
+      const aiResultJson = extractJsonObject(
+        chatCompletion.choices[0]?.message?.content,
       );
+
+      if (!aiResultJson.recommendation) {
+        aiResultJson.recommendation = "HOLD";
+        aiResultJson.sentiment = aiResultJson.sentiment || "Neutral";
+        aiResultJson.analysis =
+          aiResultJson.analysis ||
+          "Analisis AI sementara tidak tersedia. Data harga dan berita tetap dapat dilihat di atas.";
+      }
 
       res.status(200).json({
         message: "AI analysis and news fetched successfully using Groq",
@@ -148,9 +150,8 @@ class AiController {
         { role: "user", content: message },
       ];
 
-      const completion = await groq.chat.completions.create({
+      const completion = await createChatCompletion(groq, {
         messages: formattedMessages,
-        model: "llama-3.1-8b-instant",
       });
 
       const reply =
@@ -260,15 +261,25 @@ class AiController {
         }
       `;
 
-      const completion = await groq.chat.completions.create({
+      const completion = await createChatCompletion(groq, {
         messages: [{ role: "user", content: prompt }],
-        model: "llama-3.1-8b-instant",
         response_format: { type: "json_object" },
       });
 
-      const auditResult = JSON.parse(
-        completion.choices[0]?.message?.content || "{}",
+      const auditResult = extractJsonObject(
+        completion.choices[0]?.message?.content,
       );
+
+      if (!auditResult.riskScore) {
+        auditResult.riskScore = 50;
+        auditResult.riskCategory = auditResult.riskCategory || "Sedang";
+        auditResult.summary =
+          auditResult.summary ||
+          "Audit AI sementara tidak dapat menghasilkan ringkasan lengkap.";
+        auditResult.recommendations = auditResult.recommendations || [
+          "Pantau kembali portofolio setelah beberapa saat.",
+        ];
+      }
 
       res.status(200).json({
         message: "Portfolio audit completed",

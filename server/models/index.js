@@ -3,15 +3,29 @@
 const fs = require("fs");
 const path = require("path");
 const Sequelize = require("sequelize");
-const process = require("process");
 const basename = path.basename(__filename);
-const env = process.env.NODE_ENV || "development";
-const config = require(__dirname + "/../config/config.js")[env];
+const {
+  resolveEnv,
+  getSequelizeOptions,
+} = require("../config/config");
+
+const env = resolveEnv();
+const config = require("../config/config.js")[env];
 const db = {};
 
 let sequelize;
 if (config.use_env_variable) {
-  sequelize = new Sequelize(process.env[config.use_env_variable], config);
+  const databaseUrl = process.env[config.use_env_variable];
+  if (!databaseUrl) {
+    throw new Error(
+      `${config.use_env_variable} is required for "${env}" but is not set.`,
+    );
+  }
+
+  sequelize = new Sequelize(
+    databaseUrl,
+    getSequelizeOptions(config, databaseUrl),
+  );
 } else {
   sequelize = new Sequelize(
     config.database,
