@@ -361,21 +361,39 @@ File acuan: [`servis/WhaleWatchAi_Backend/.env.example`](servis/WhaleWatchAi_Bac
 - Setelah backend live, update `baseURL` di `utils/api.js` (atau env Vite jika Anda tambahkan nanti)
 - Samakan Google OAuth origins & Midtrans client key dengan environment produksi/sandbox yang dipakai
 
-### Backend
+### Backend (Railway)
 
-- Host Node (VPS, Railway, Render, dll.)
-- Set **`DATABASE_URL`** (wajib) — Railway Postgres otomatis inject variable ini
-- Set **`NODE_ENV=production`** (disarankan; tanpa ini app auto-detect Railway via `RAILWAY_*` vars)
-- Migration otomatis saat `npm start` (`scripts/migrate.js` → `sequelize-cli db:migrate`)
+Monorepo: backend ada di `server/` (tidak ada app Node di root sebelum safety-net `package.json`).
+
+**Wajib di Railway dashboard:**
+
+1. **Root Directory** = `server` (Settings → Root Directory). Ini yang paling penting.
+2. Tambah **Postgres** plugin di project yang sama; pastikan `DATABASE_URL` berasal dari Railway Postgres (bukan URL Supabase yang sudah mati).
+3. Variables web service: `DATABASE_URL`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `GROQ_API_KEY`, `COINGECKO_API_KEY`, Midtrans keys. `NODE_ENV=production` disarankan.
+4. **Hapus / jangan share `PORT` dari Postgres** ke web service. `PORT=5432` membuat healthcheck gagal karena app listen di port DB, bukan port HTTP Railway.
+5. `GOOGLE_CLIENT_SECRET` **tidak diperlukan** (backend verify Google ID token dengan `GOOGLE_CLIENT_ID` saja).
+6. Setelah push kode baru: Deployments → pastikan deploy **SUCCESS** (bukan hanya Service Online dari deploy lama).
+7. Verifikasi: `GET /health` → 200; `GET /ready` → db connected; `POST /api/auth/register` tidak 500.
+
+`npm start` = migrate (`scripts/migrate.js`) lalu `bin/www.js`. Jika migrate gagal, proses exit → healthcheck `/health` gagal → deploy **FAILED**, sementara container lama tetap Online.
+
+- Migration otomatis saat `npm start`
 - Manual migrate: `npm run migrate` di folder `server/`
-- Inject semua secret di atas ke process environment
-- Pastikan webhook Midtrans mengarah ke `https://<domain-api>/api/payment/notification`
 - CORS sudah dikonfigurasi untuk origin request browser
+- Pastikan webhook Midtrans mengarah ke `https://<domain-api>/api/payment/notification`
+
+### Google OAuth (Google Cloud Console)
+
+- Authorized JavaScript origins: `https://clien-five.vercel.app` (+ `http://localhost:5173` untuk dev)
+- Authorized redirect URIs jika dipakai: sama domain Vercel
+- Client ID di Vercel/`VITE_GOOGLE_CLIENT_ID` **harus sama** dengan `GOOGLE_CLIENT_ID` di Railway
 
 ### Checklist pasca-deploy
 
-- [ ] `POST /api/auth/register` & `/login` berhasil
-- [ ] Google login (origin & client ID cocok)
+- [ ] Deploy terbaru di Railway = Success (bukan Failed)
+- [ ] `GET https://<api>/health` = 200
+- [ ] `POST /api/auth/register` & `/login` berhasil (bukan 500)
+- [ ] Google login (`POST /api/auth/login-google`) — origin & client ID cocok
 - [ ] `GET /api/coins/markets` & detail bitcoin
 - [ ] `POST /api/ai/chat` dengan Bearer token
 - [ ] Snap Midtrans sandbox terbuka dari `/upgrade`

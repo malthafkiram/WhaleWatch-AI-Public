@@ -46,8 +46,9 @@ class AuthController {
         message: "Created Successfuly",
       });
     } catch (error) {
-      if (isDatabaseError(error)) {
-        error.name = "SequelizeConnectionError";
+      // Keep original Sequelize error name/code so errorHandler can detect missing tables (42P01).
+      if (isDatabaseError(error?.parent) && !String(error?.name || "").startsWith("Sequelize")) {
+        error.name = error.parent.name || "SequelizeConnectionError";
       }
       next(error);
     }
@@ -92,8 +93,8 @@ class AuthController {
         },
       });
     } catch (error) {
-      if (isDatabaseError(error)) {
-        error.name = "SequelizeConnectionError";
+      if (isDatabaseError(error?.parent) && !String(error?.name || "").startsWith("Sequelize")) {
+        error.name = error.parent.name || "SequelizeConnectionError";
       }
       next(error);
     }
@@ -162,8 +163,8 @@ class AuthController {
         isNewGoogleUser: created,
       });
     } catch (error) {
-      if (isDatabaseError(error)) {
-        error.name = "SequelizeConnectionError";
+      if (isDatabaseError(error?.parent) && !String(error?.name || "").startsWith("Sequelize")) {
+        error.name = error.parent.name || "SequelizeConnectionError";
       }
       next(error);
     }

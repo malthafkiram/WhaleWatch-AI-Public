@@ -1,5 +1,5 @@
-# Root Directory di Railway MUST be "server/" for this file to apply.
-# Monorepo root juga punya railway.toml + package.json sebagai fallback.
+# Prefer setting Railway Root Directory to "server/" (recommended).
+# This root file is a fallback if Root Directory is the monorepo root.
 [build]
 builder = "nixpacks"
 

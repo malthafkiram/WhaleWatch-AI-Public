@@ -57,10 +57,19 @@ function buildSslOptions(databaseUrl = process.env.DATABASE_URL) {
 
 function getSequelizeOptions(config, databaseUrl) {
   if (config.use_env_variable) {
+    const dialectOptions = {
+      ...buildSslOptions(databaseUrl),
+      // Fail fast on bad DATABASE_URL so migrate/start does not hang Railway healthcheck.
+      connectionTimeoutMillis: 10000,
+    };
+
     return {
       dialect: "postgres",
       logging: config.logging ?? false,
-      dialectOptions: buildSslOptions(databaseUrl),
+      dialectOptions,
+      pool: {
+        acquire: 10000,
+      },
     };
   }
 
@@ -88,6 +97,13 @@ module.exports = {
   production: {
     use_env_variable: "DATABASE_URL",
     dialect: "postgres",
-    dialectOptions: buildSslOptions(),
+    logging: false,
+    dialectOptions: {
+      ...buildSslOptions(),
+      connectionTimeoutMillis: 10000,
+    },
+    pool: {
+      acquire: 10000,
+    },
   },
 };

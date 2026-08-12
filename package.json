@@ -1,0 +1,13 @@
+{
+  "name": "whalewatch-ai-public",
+  "private": true,
+  "description": "Monorepo safety net: Railway Root Directory should be server/. This root package delegates if Root Directory is left as repo root.",
+  "scripts": {
+    "postinstall": "npm install --prefix server",
+    "start": "npm start --prefix server",
+    "migrate": "npm run migrate --prefix server"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

@@ -1,6 +1,23 @@
 function errorHandler(error, req, res, next) {
-  console.log(error);
-  console.log(error.errors);
+  const original = error?.original || error?.parent;
+  console.error("[errorHandler]", {
+    name: error?.name,
+    message: error?.message,
+    code: original?.code,
+    detail: original?.detail,
+    table: original?.table,
+    column: original?.column,
+    constraint: original?.constraint,
+    path: req?.originalUrl,
+    method: req?.method,
+  });
+  if (Array.isArray(error?.errors) && error.errors.length) {
+    console.error(
+      "[errorHandler] validation:",
+      error.errors.map((e) => e.message).join("; "),
+    );
+  }
+
   let message = "Internal Server Error";
   let status = 500;
 
@@ -19,6 +36,16 @@ function errorHandler(error, req, res, next) {
 
   if (error.name === "invalidToken") {
     message = "Invalid signature";
+    status = 401;
+  }
+
+  // google-auth-library / malformed ID token
+  if (
+    /Wrong number of segments|Can't parse token|Invalid token signature|Token used too (early|late)|audience does not match/i.test(
+      String(error.message || ""),
+    )
+  ) {
+    message = "Invalid Google token";
     status = 401;
   }
 
