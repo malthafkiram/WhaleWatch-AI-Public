@@ -1,0 +1,282 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "⚡ WHALEWATCH AI TERMINAL MASTER API ⚡",
+    "version": "4.0.0-PRO",
+    "description": "Dokumentasi enkripsi API terpusat untuk platform WhaleWatch AI Quantum Telemetry & WhaleTycoon Trading Simulator Game. Seluruh endpoint terproteksi wajib melampirkan token JWT valid pada header otorisasi."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000",
+      "description": "Quantum Local Development Node"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Authentication Cluster"],
+        "summary": "Mendaftarkan agen pengguna baru ke database",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["username", "email", "password"],
+                "properties": {
+                  "username": { "type": "string", "example": "althaf_kiram" },
+                  "email": {
+                    "type": "string",
+                    "example": "althaf@whalewatch.ai"
+                  },
+                  "password": { "type": "string", "example": "securepass123" },
+                  "avatar": {
+                    "type": "string",
+                    "example": "https://avatar.url/image.png"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Agent Profile Created Successfully" }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": ["Authentication Cluster"],
+        "summary": "Autentikasi sesi menggunakan kredensial email & password",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "example": "althaf@whalewatch.ai"
+                  },
+                  "password": { "type": "string", "example": "securepass123" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login Berhasil, mengembalikan access_token JWT"
+          }
+        }
+      }
+    },
+    "/api/auth/profile": {
+      "get": {
+        "tags": ["Authentication Cluster"],
+        "summary": "Mengambil info profil user beserta akumulasi virtual cash game terupdate",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Berhasil menarik profil terbaru dari PostgreSQL Node"
+          }
+        }
+      }
+    },
+    "/api/coins/markets": {
+      "get": {
+        "tags": ["Crypto Markets Intelligence"],
+        "summary": "Mengambil daftar 20 pasar koin terpopuler berdasarkan filter kategori bursa",
+        "parameters": [
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["layer1", "layer2", "meme", "ai"]
+            },
+            "description": "Kategori klaster kripto untuk membatasi pemetaan data"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Fetch market telemetry data successfully" }
+        }
+      }
+    },
+    "/api/coins/detail/{id}": {
+      "get": {
+        "tags": ["Crypto Markets Intelligence"],
+        "summary": "Mendapatkan data detail statistik koin beserta metrik keaktifan commit GitHub",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "ID unik koin riil (contoh: bitcoin)"
+          }
+        ],
+        "responses": {
+          "200": { "description": "Fetch coin telemetry detail successfully" }
+        }
+      }
+    },
+    "/api/game/predict": {
+      "post": {
+        "tags": ["WhaleTycoon Simulator Game"],
+        "summary": "Tahap 1: Membuka posisi perdagangan virtual & mengunci entry price awal koin ke database",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["coinId", "prediction"],
+                "properties": {
+                  "coinId": { "type": "string", "example": "bitcoin" },
+                  "prediction": {
+                    "type": "string",
+                    "enum": ["PUMP", "DUMP"],
+                    "example": "PUMP"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Posisi transaksi virtual berhasil dikunci di database"
+          },
+          "400": {
+            "description": "Validasi gagal (Ada taruhan pending yang belum selesai / Saldo habis)"
+          }
+        }
+      }
+    },
+    "/api/game/settle": {
+      "post": {
+        "tags": ["WhaleTycoon Simulator Game"],
+        "summary": "Tahap 2: Pemicu otomatis pasca-1-menit untuk mengevaluasi kemenangan transaksi aktif",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Blok harga berhasil diselesaikan (Settled). Mengembalikan status WIN/LOSE serta mutasi saldo dompet terbaru"
+          },
+          "400": {
+            "description": "Tidak ada transaksi berstatus PENDING yang siap diselesaikan"
+          }
+        }
+      }
+    },
+    "/api/watchlist": {
+      "get": {
+        "tags": ["Watchlist Radar Corridor"],
+        "summary": "Melihat semua koin yang masuk ke radar pantauan personal user",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Berhasil memuat daftar watchlist" }
+        }
+      },
+      "post": {
+        "tags": ["Watchlist Radar Corridor"],
+        "summary": "Mendaftarkan koin baru ke dalam koridor pemantauan taktis",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["coinId"],
+                "properties": {
+                  "coinId": { "type": "string", "example": "ethereum" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Berhasil menambahkan target koin ke radar pantauan"
+          }
+        }
+      }
+    },
+    "/api/watchlist/{id}": {
+      "delete": {
+        "tags": ["Watchlist Radar Corridor"],
+        "summary": "Menghapus koin dari radar pantauan berdasarkan parameter ID baris data",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "integer" },
+            "description": "ID unik baris data watchlist"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Target koin berhasil dieliminasi dari radar pantauan"
+          }
+        }
+      }
+    },
+    "/api/ai/analyze/{id}": {
+      "get": {
+        "tags": ["AI Groq Quantum Core"],
+        "summary": "Memicu deep-analysis sentimen koin gabungan Groq AI Llama-3 & live RSS news feed",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "ID unik koin yang akan dianalisis oleh AI Core"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "AI analysis and global news stream compiled successfully using Groq SDK"
+          }
+        }
+      }
+    },
+    "/api/payment/initiate": {
+      "post": {
+        "tags": ["Premium Monetization Network"],
+        "summary": "Membuat token otorisasi transaksi Midtrans Snap untuk peningkatan akun ke Premium",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Sesi gerbang pembayaran Midtrans Snap sukses diinisialisasi"
+          }
+        }
+      }
+    },
+    "/api/payment/notification": {
+      "post": {
+        "tags": ["Premium Monetization Network"],
+        "summary": "Webhook otomatis penangkap data mutasi pembayaran langsung dari server Midtrans",
+        "responses": {
+          "200": { "description": "Webhook notification handled, status OK" }
+        }
+      }
+    }
+  }
+}

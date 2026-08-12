@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- 1. DEFINISI GRADIENT WARNA CIBER -->
+  <defs>
+    <linearGradient id="cyberGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8B5CF6" /> <!-- Cyber Neon / Purple -->
+      <stop offset="100%" stop-color="#06B6D4" /> <!-- Cyber Cyan -->
+    </linearGradient>
+  </defs>
+
+  <!-- 2. SIMBUL RADAR PING / AI MONITOR (Garis Melengkung Atas) -->
+  <path d="M6 10C10.5 5.5 21.5 5.5 26 10" stroke="url(#cyberGradient)" stroke-width="2.5" stroke-linecap="round" opacity="0.4" />
+  <path d="M10 13C13 10 19 10 22 13" stroke="url(#cyberGradient)" stroke-width="2.5" stroke-linecap="round" opacity="0.7" />
+
+  <!-- 3. GEOMETRI UTAMA: EKOR WHALE (PAUS INTEL] -->
+  <path d="M16 28C16 28 12 21 8 19C4 17 2 18 2 18C2 18 4 14 9 14C13.5 14 15.5 17.5 16 19.5C16.5 17.5 18.5 14 23 14C28 14 30 18 30 18C30 18 28 17 24 19C20 21 16 28 16 28Z" fill="url(#cyberGradient)" />
+
+  <!-- 4. PUSAT DATUM AI (Titik Sensor Pusat) -->
+  <circle cx="16" cy="19.5" r="2" fill="#FFFFFF" />
+</svg>
